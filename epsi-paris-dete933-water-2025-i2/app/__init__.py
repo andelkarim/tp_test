@@ -16,10 +16,6 @@ def create_app():
     app.register_blueprint(main.bp)
     return app
     
-markers =
-    unit: tests unitaires rapides
-    integration: tests d'intégration (DB/services)
-    ui: tests Selenium (UI)
 
 app = create_app()
 
