@@ -1,6 +1,7 @@
 import pytest
 pytestmark = pytest.mark.unit
 
+
 # ⚠️ adapte l'import selon ton projet
 # ex: from app.predict import predict_water
 from app.predict import predict_water
