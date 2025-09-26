@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt
-      - run: pytest -m unit -q   # ✅ unit only
+      - run: pytest tests/unit -q   # ✅ exécute uniquement les tests unitaires
 
   integration:
     name: integration-tests (PR only)
@@ -44,7 +44,7 @@ jobs:
       - name: Run integration tests
         env:
           DATABASE_URL: postgres://user:pass@localhost:5432/watertracker
-        run: pytest -m integration -q
+        run: pytest tests/integration -q   # ✅ uniquement les tests d’intégration
 
   ui:
     name: ui-tests (main only)
@@ -63,4 +63,4 @@ jobs:
       - name: Run Selenium tests
         env:
           APP_URL: "http://localhost:8000"
-        run: pytest -m ui -q
+        run: pytest tests/ui -q   # ✅ uniquement les tests UI
