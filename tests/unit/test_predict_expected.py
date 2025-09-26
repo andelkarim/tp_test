@@ -1,15 +1,18 @@
 import pytest
+import numpy as np
 from app.predict import predict_water
 
 pytestmark = pytest.mark.unit
 
 def test_prediction_expected():
-    # Données d'entrée stables
-    features = {"weight": 70, "age": 25, "activity_level": "medium"}
+    # Entrées stables et valides pour la fonction: deux séries numériques
+    sleeptime = [7, 8, 6.5]          # heures de sommeil
+    steps = [8000, 9500, 10000]      # nombre de pas
 
-    pred = predict_water(features)
+    pred = predict_water(sleeptime, steps)
 
-    # On valide un résultat numérique et plausible
+    # Valeur attendue calculée avec la même formule que dans l'app
+    expected = 0.002 * np.average(sleeptime) + 0.009 * np.average(steps)
+
     assert isinstance(pred, (int, float))
-    # garde une borne large pour rester robuste aux formules internes
-    assert 0 < pred < 10
+    assert pred == pytest.approx(expected, rel=1e-6)
