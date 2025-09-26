@@ -1,4 +1,6 @@
 import pytest
+pytestmark = pytest.mark.unit
+
 
 from app import create_app
 
