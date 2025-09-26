@@ -6,6 +6,7 @@ on:
   pull_request:
 
 jobs:
+  # ------------------- UNIT -------------------
   unit:
     name: unit-tests
     runs-on: ubuntu-latest
@@ -15,13 +16,14 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt
-      # ✅ On limite la collecte aux tests unitaires en changeant de répertoire
-      - name: Run unit tests
+      - name: Run unit tests (no DB)
         run: pytest -q
         working-directory: tests/unit
         env:
           PYTHONPATH: .
+          SKIP_DB_INIT: "1"   # ⬅️ empêche l'init DB pendant les unit tests
 
+  # ---------------- INTEGRATION (PR only) ----------------
   integration:
     name: integration-tests (PR only)
     if: github.event_name == 'pull_request'
@@ -46,13 +48,15 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt
-      - name: Run integration tests
+      - name: Run integration tests (with DB)
         run: pytest -q
         working-directory: tests/integration
         env:
           PYTHONPATH: .
           DATABASE_URL: postgres://user:pass@localhost:5432/watertracker
+          # PAS de SKIP_DB_INIT ici -> on veut init_db()
 
+  # ------------------- UI (main only) -------------------
   ui:
     name: ui-tests (main only)
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -72,12 +76,12 @@ jobs:
           sudo apt-get install -y google-chrome-stable
           pip install -r requirements.txt
           pip install selenium webdriver-manager
-      - name: Start app (Flask)
-        # ajuste si nécessaire; on force l'app Flask et le PYTHONPATH
+      - name: Start app (Flask, no DB)
         run: python -m flask --app app run --host=0.0.0.0 --port=8000 & sleep 5
         env:
           FLASK_APP: app
           PYTHONPATH: .
+          SKIP_DB_INIT: "1"   # ⬅️ pas d’init DB pour l’UI
       - name: Run UI tests
         run: pytest -q
         working-directory: tests/ui
