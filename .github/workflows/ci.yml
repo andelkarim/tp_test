@@ -15,7 +15,12 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt
-      - run: pytest tests/unit -q   # ✅ uniquement le dossier unit
+      # ✅ On limite la collecte aux tests unitaires en changeant de répertoire
+      - name: Run unit tests
+        run: pytest -q
+        working-directory: tests/unit
+        env:
+          PYTHONPATH: .
 
   integration:
     name: integration-tests (PR only)
@@ -42,9 +47,11 @@ jobs:
           python-version: "3.11"
       - run: pip install -r requirements.txt
       - name: Run integration tests
+        run: pytest -q
+        working-directory: tests/integration
         env:
+          PYTHONPATH: .
           DATABASE_URL: postgres://user:pass@localhost:5432/watertracker
-        run: pytest tests/integration -q   # ✅ uniquement le dossier integration
 
   ui:
     name: ui-tests (main only)
@@ -55,12 +62,25 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: |
+      - name: Install deps (selenium + chrome)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget gnupg
+          wget -qO- https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-linux.gpg
+          echo "deb [signed-by=/usr/share/keyrings/google-linux.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
           pip install -r requirements.txt
-          pip install selenium webdriver-manager uvicorn
-      - name: Start app
-        run: flask run --host=0.0.0.0 --port=8000 & sleep 5
-      - name: Run Selenium tests
+          pip install selenium webdriver-manager
+      - name: Start app (Flask)
+        # ajuste si nécessaire; on force l'app Flask et le PYTHONPATH
+        run: python -m flask --app app run --host=0.0.0.0 --port=8000 & sleep 5
+        env:
+          FLASK_APP: app
+          PYTHONPATH: .
+      - name: Run UI tests
+        run: pytest -q
+        working-directory: tests/ui
         env:
           APP_URL: "http://localhost:8000"
-        run: pytest tests/ui -q   # ✅ uniquement le dossier ui
+          PYTHONPATH: .
