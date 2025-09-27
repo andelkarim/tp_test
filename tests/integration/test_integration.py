@@ -56,4 +56,4 @@ def test_user_activity_summary(client):
     assert b"999" in response.data  # Vérifier que l'ID utilisateur est affiché
     assert b"8" in response.data  # Vérifier que les données sont affichées
     assert b"10000" in response.data
-    assert b"2000" in response.data
+    assert b"2000" in response.data# Trigger integration tests
