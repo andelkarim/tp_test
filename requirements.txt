@@ -334,4 +334,5 @@ wtforms==3.2.1 \
     --hash=sha256:df3e6b70f3192e92623128123ec8dca3067df9cfadd43d59681e210cfb8d4682
     # via flask-wtf
 gunicorn==23.0.0
+    --hash=sha256:ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d
 
