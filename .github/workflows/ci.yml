@@ -1,56 +1,119 @@
-name: CI
+name: Python application
 
 on:
   push:
-    branches: ["**"]
+    branches: [ "main" ]
   pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: write  # Change permissions to allow writing back to the repo
+
+# Fichier : .github/workflows/python-app.yml
+
+# ...
 
 jobs:
-  # ------------------- UNIT -------------------
-  unit:
-    name: Unit Tests
+  # Étape 1 : Build et Lint
+  # Étape 1 : Build et Lint
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v3
         with:
           python-version: "3.11"
-      - run: pip install -r requirements.txt
-      - name: Run unit tests (no DB)
-        run: pytest -q
-        working-directory: tests/unit
-        env:
-          PYTHONPATH: ${{ github.workspace }}   # ✅ racine du repo
-          SKIP_DB_INIT: "1"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        
+      - name: Lint with Ruff (Check only)
+        # This will fail the build if the code is not formatted or has linting issues.
+        run: |
+          ruff check .
+        #  ruff format --check . 
+      
+      - name: Format with Ruff and Commit Changes
+        # This step will only run on a direct push to 'main' and will be skipped on a Pull Request.
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          ruff format .
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          # Use --allow-empty to avoid failure if no changes are made
+          git commit --allow-empty -m "style: Apply automatic ruff formatting" 
+          git push
 
-  # ------------------- INTEGRATION -------------------
-  integration:
-    if: github.event_name == 'pull_request'   # ✅ PR/MR only
-    needs: unit                                # (optionnel) attend que unit passe
-    name: Integration Tests
+  # Étape 2 : Test Unitaire
+  test-unit:
+    needs: build
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run Unit Tests
+        run: pytest tests/test_unit.py
+
+  # Étape 3 : Test d'Intégration
+  # Fichier : .github/workflows/python-app.yml
+
+# ... autres jobs (build et test-unit)
+
+  # Étape 3 : Test Integration
+  # Étape 3 : Test Integration
+  test-integration:
+    needs: build
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    # DÉMARRAGE DU SERVICE POSTGRESQL (inchangé)
     services:
       postgres:
-        image: postgres:14
+        image: postgres:14-alpine
         env:
-          POSTGRES_USER: water
-          POSTGRES_PASSWORD: water
-          POSTGRES_DB: water
-        ports: ["5432:5432"]
+          POSTGRES_USER: ci_user
+          POSTGRES_PASSWORD: ci_password
+          POSTGRES_DB: watertracker_db
+        ports:
+          - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U user -d watertracker"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v3
         with:
           python-version: "3.11"
-      - run: pip install -r requirements.txt
-      - name: Run integration tests
-        run: pytest -q
-        working-directory: tests/integration
-        env:
-         PYTHONPATH: ${{ github.workspace }}
-         DATABASE_URL: postgres://water:water@localhost:5432/water
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        
+      # CONFIGURATION DE LA BASE DE DONNÉES (inchangé)
+      - name: Set DB environment variables
+        run: |
+          echo "DATABASE_URL=postgresql://ci_user:ci_password@localhost:5432/watertracker_db" >> $GITHUB_ENV
+          echo "DATABASE_HOST=localhost" >> $GITHUB_ENV
+          echo "DATABASE_PORT=5432" >> $GITHUB_ENV
+          echo "DATABASE_USER=ci_user" >> $GITHUB_ENV
+          echo "DATABASE_PASSWORD=ci_password" >> $GITHUB_ENV
+          echo "DATABASE_NAME=watertracker_db" >> $GITHUB_ENV
+      
+      - name: Initialize Database
+        # CORRECTION FINALE : Contourne les erreurs YAML et Python en forçant le contexte Flask avec .push()
+        run: |
+          # Attendre que Postgres soit prêt (5s est sûr)
+          sleep 5
+          # Script Python en une seule commande, sans problème d'indentation YAML
+          python -c "import sys; sys.path.append('.'); from app import create_app; from app.db import init_db; app = create_app(); app.app_context().push(); init_db()"
+
+      - name: Run Integration Tests
+        run: pytest tests/test_integration.py
