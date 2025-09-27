@@ -4,10 +4,11 @@ from app.predict import predict_water
 
 pytestmark = pytest.mark.unit
 
+
 def test_prediction_expected():
     # Entrées stables et valides pour la fonction: deux séries numériques
-    sleeptime = [7, 8, 6.5]          # heures de sommeil
-    steps = [8000, 9500, 10000]      # nombre de pas
+    sleeptime = [7, 8, 6.5]  # heures de sommeil
+    steps = [8000, 9500, 10000]  # nombre de pas
 
     pred = predict_water(sleeptime, steps)
 
