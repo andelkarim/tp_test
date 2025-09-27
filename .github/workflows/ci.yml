@@ -8,7 +8,7 @@ on:
 jobs:
   # ------------------- UNIT -------------------
   unit:
-    name: unit-tests
+    name: Unit Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,12 +21,12 @@ jobs:
         working-directory: tests/unit
         env:
           PYTHONPATH: .
-          SKIP_DB_INIT: "1"   # ⬅️ empêche l'init DB pendant les unit tests
+          SKIP_DB_INIT: "1"   # empêche l'init DB pendant les unit tests
 
-          
+  # ------------------- INTEGRATION -------------------
   integration:
     if: github.event_name == 'pull_request'
-    name: integration-tests
+    name: Integration Tests
     runs-on: ubuntu-latest
     services:
       postgres:
