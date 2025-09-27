@@ -58,7 +58,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Run Unit Tests
-        run: pytest tests/test_unit.py
+        run: pytest tests/unit/test_unit.py
 
   # Étape 3 : Test d'Intégration
   # Fichier : .github/workflows/python-app.yml
