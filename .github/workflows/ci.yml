@@ -22,3 +22,31 @@ jobs:
         env:
           PYTHONPATH: .
           SKIP_DB_INIT: "1"   # ⬅️ empêche l'init DB pendant les unit tests
+
+integration:
+  if: github.event_name == 'pull_request'
+  runs-on: ubuntu-latest
+  services:
+    postgres:
+      image: postgres:14
+      env:
+        POSTGRES_USER: user
+        POSTGRES_PASSWORD: pass
+        POSTGRES_DB: watertracker
+      ports: ["5432:5432"]
+      options: >-
+        --health-cmd="pg_isready -U user -d watertracker"
+        --health-interval=10s
+        --health-timeout=5s
+        --health-retries=5
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with: { python-version: "3.11" }
+    - run: pip install -r requirements.txt
+    - name: Run integration tests
+      run: pytest -q
+      working-directory: tests/integration
+      env:
+        PYTHONPATH: .
+        DATABASE_URL: postgres://user:pass@localhost:5432/watertracker
