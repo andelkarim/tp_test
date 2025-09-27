@@ -116,4 +116,4 @@ jobs:
           python -c "import sys; sys.path.append('.'); from app import create_app; from app.db import init_db; app = create_app(); app.app_context().push(); init_db()"
 
       - name: Run Integration Tests
-        run: pytest tests/test_integration.py
+        run: pytest tests/integration/test_integration.py
