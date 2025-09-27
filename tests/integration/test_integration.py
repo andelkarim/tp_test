@@ -22,3 +22,6 @@ def test_summary_display(client):
     # on accepte "Summary" ou "Résumé" selon ton template
     body = resp.data.decode().lower()
     assert ('summary' in body) or ('résumé' in body)
+
+
+# test pr
