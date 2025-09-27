@@ -20,12 +20,13 @@ jobs:
         run: pytest -q
         working-directory: tests/unit
         env:
-          PYTHONPATH: .
-          SKIP_DB_INIT: "1"   # empêche l'init DB pendant les unit tests
+          PYTHONPATH: ${{ github.workspace }}   # ✅ racine du repo
+          SKIP_DB_INIT: "1"
 
   # ------------------- INTEGRATION -------------------
   integration:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request'   # ✅ PR/MR only
+    needs: unit                                # (optionnel) attend que unit passe
     name: Integration Tests
     runs-on: ubuntu-latest
     services:
@@ -51,5 +52,5 @@ jobs:
         run: pytest -q
         working-directory: tests/integration
         env:
-          PYTHONPATH: .
-          DATABASE_URL: postgres://user:pass@localhost:5432/watertracker
+          PYTHONPATH: ${{ github.workspace }}   # ✅ racine du repo
+          DATABASE_URL: postgresql://user:pass@localhost:5432/watertracker  # ✅ prefix "postgresql://"
