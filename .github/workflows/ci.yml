@@ -33,9 +33,9 @@ jobs:
       postgres:
         image: postgres:14
         env:
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: pass
-          POSTGRES_DB: watertracker
+          POSTGRES_USER: water
+          POSTGRES_PASSWORD: water
+          POSTGRES_DB: water
         ports: ["5432:5432"]
         options: >-
           --health-cmd="pg_isready -U user -d watertracker"
@@ -52,5 +52,5 @@ jobs:
         run: pytest -q
         working-directory: tests/integration
         env:
-          PYTHONPATH: ${{ github.workspace }}   # ✅ racine du repo
-          DATABASE_URL: postgresql://user:pass@localhost:5432/watertracker  # ✅ prefix "postgresql://"
+         PYTHONPATH: ${{ github.workspace }}
+         DATABASE_URL: postgres://water:water@localhost:5432/water
