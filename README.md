@@ -12,4 +12,5 @@ flask --app main sample-data
 
 ### 1. Build the image
 ```bash
-docker build -t watertracker:latest .
+# La commande -t (tag) permet de nommer l'image (ex: 'water-tracker-app')
+docker build -t water-tracker-app .
