@@ -117,3 +117,34 @@ jobs:
 
       - name: Run Integration Tests
         run: pytest tests/integration/test_integration.py
+  # Étape 4 : Test UI avec Selenium
+  test-ui:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    services:
+      web:
+        image: watertracker:latest
+        ports:
+          - 5000:5000
+        options: >-
+          --health-cmd="curl --fail http://localhost:5000/ || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Install Chrome & Chromedriver
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser chromium-chromedriver
+      - name: Run Selenium UI Tests
+        run: pytest tests/test_ui.py
